@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg"
 	"image/png"
 	_ "image/png"
@@ -85,6 +86,18 @@ func run() error {
 	ditherer := ditherers[0]
 	goo := ditherer.Monochrome(gray, float32(ErrMul))
 
+	b := gray.Bounds()
+	fmt.Printf("gray image: width=%d, height=%d, stride=%d\n", b.Dx(), b.Dy(), gray.Stride)
+	fmt.Printf("len pix = %d\n", len(gray.Pix))
+
+	// this is how you read an image "line by line"?
+	for i := 0; i < len(gray.Pix); i += gray.Stride {
+		row := gray.Pix[i : i+gray.Stride]
+		fmt.Printf("len(row) = %d\n", len(row))
+	}
+
+	fmt.Printf("Color Model: %+v\n", gray.ColorModel() == color.GrayModel)
+
 	out, err := os.Create("output.png")
 	if err != nil {
 		return err
@@ -102,6 +115,12 @@ func run() error {
 }
 
 func main() {
+	gh := convert(checksumTable)
+	for _, i := range gh {
+		fmt.Printf("0x%X ", i)
+	}
+	fmt.Println()
+
 	if err := run(); err != nil {
 		log.Print(err)
 		os.Exit(1)
