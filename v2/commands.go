@@ -1,7 +1,6 @@
 package v2
 
 import (
-	"fmt"
 	"image"
 )
 
@@ -81,7 +80,7 @@ func PrintImage(img *image.Gray) [][]byte {
 
 			bmp[bit/8] >>= 1
 
-			fmt.Printf("val = 0x%X\n", val)
+			// fmt.Printf("val = 0x%X\n", val)
 			if val == 0 {
 				bmp[bit/8] |= 0x80
 			} else {

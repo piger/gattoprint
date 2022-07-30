@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"image"
 	"image/color"
 	_ "image/jpeg"
 	"image/png"
@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/disintegration/imaging"
 	dither "github.com/esimov/dithergo"
 	v2 "github.com/piger/gattoprint/v2"
 	"tinygo.org/x/bluetooth"
@@ -60,65 +59,72 @@ func blackOrWhite(g color.Gray) color.Gray {
 	return color.Gray{255} // White
 }
 
-func run() error {
-	fd, err := os.Open("groucho-marx.jpg")
+func run(filename string) error {
+	/*
+		fd, err := os.Open("groucho-marx.jpg")
+		if err != nil {
+			return err
+		}
+		defer fd.Close()
+
+		im, imfmt, err := image.Decode(fd)
+		if err != nil {
+			return err
+		}
+		bounds := im.Bounds()
+		width := bounds.Dx()
+		height := bounds.Dy()
+		fmt.Printf("image (%s) size: %dx%d\n", imfmt, width, height)
+
+		factor := float64(PrintWidth) / float64(width)
+		newHeight := int(float64(height) * factor)
+		fmt.Println("to: ", factor, float64(height)*factor, newHeight)
+
+		dstImage := imaging.Resize(im, PrintWidth, newHeight, imaging.Lanczos)
+
+		// XXX: we should do padding so that the image matches the print width!
+
+		newBounds := dstImage.Bounds()
+		gray := image.NewGray(newBounds)
+		for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
+			for y := newBounds.Min.Y; y < newBounds.Dy(); y++ {
+				pixel := dstImage.At(x, y)
+				gray.Set(x, y, pixel)
+			}
+		}
+
+		white := image.NewGray(newBounds)
+		for i := range white.Pix {
+			white.Pix[i] = 255
+		}
+
+		for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
+			for y := newBounds.Min.Y; y < newBounds.Dy(); y++ {
+				c := blackOrWhite(gray.GrayAt(x, y))
+				white.Set(x, y, c)
+			}
+		}
+
+		ditherer := ditherers[0]
+		goo := ditherer.Monochrome(gray, float32(ErrMul))
+
+		b := white.Bounds()
+		fmt.Printf("gray image: width=%d, height=%d, stride=%d\n", b.Dx(), b.Dy(), white.Stride)
+		fmt.Printf("len pix = %d\n", len(white.Pix))
+
+		// this is how you read an image "line by line"?
+		for i := 0; i < len(white.Pix); i += white.Stride {
+			row := white.Pix[i : i+white.Stride]
+			fmt.Printf("len(row) = %d\n", len(row))
+		}
+
+		fmt.Printf("Color Model: %+v\n", white.ColorModel() == color.GrayModel)
+	*/
+
+	goo, err := v2.ConvertImage(filename)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
-
-	im, imfmt, err := image.Decode(fd)
-	if err != nil {
-		return err
-	}
-	bounds := im.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-	fmt.Printf("image (%s) size: %dx%d\n", imfmt, width, height)
-
-	factor := float64(PrintWidth) / float64(width)
-	newHeight := int(float64(height) * factor)
-	fmt.Println("to: ", factor, float64(height)*factor, newHeight)
-
-	dstImage := imaging.Resize(im, PrintWidth, newHeight, imaging.Lanczos)
-
-	// XXX: we should do padding so that the image matches the print width!
-
-	newBounds := dstImage.Bounds()
-	gray := image.NewGray(newBounds)
-	for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
-		for y := newBounds.Min.Y; y < newBounds.Dy(); y++ {
-			pixel := dstImage.At(x, y)
-			gray.Set(x, y, pixel)
-		}
-	}
-
-	white := image.NewGray(newBounds)
-	for i := range white.Pix {
-		white.Pix[i] = 255
-	}
-
-	for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
-		for y := newBounds.Min.Y; y < newBounds.Dy(); y++ {
-			c := blackOrWhite(gray.GrayAt(x, y))
-			white.Set(x, y, c)
-		}
-	}
-
-	ditherer := ditherers[0]
-	goo := ditherer.Monochrome(gray, float32(ErrMul))
-
-	b := white.Bounds()
-	fmt.Printf("gray image: width=%d, height=%d, stride=%d\n", b.Dx(), b.Dy(), white.Stride)
-	fmt.Printf("len pix = %d\n", len(white.Pix))
-
-	// this is how you read an image "line by line"?
-	for i := 0; i < len(white.Pix); i += white.Stride {
-		row := white.Pix[i : i+white.Stride]
-		fmt.Printf("len(row) = %d\n", len(row))
-	}
-
-	fmt.Printf("Color Model: %+v\n", white.ColorModel() == color.GrayModel)
 
 	out, err := os.Create("output.png")
 	if err != nil {
@@ -130,7 +136,8 @@ func run() error {
 		return err
 	}
 
-	queue := v2.PrintImage(goo.(*image.Gray))
+	queue := v2.PrintImage(goo)
+	return nil
 
 	if err := v2.SendCommands(queue); err != nil {
 		fmt.Printf("error sending commands: %s\n", err)
@@ -143,15 +150,17 @@ func run() error {
 }
 
 func main() {
-	/*
-		gh := convert(checksumTable)
-		for _, i := range gh {
-			fmt.Printf("0x%X ", i)
-		}
-		fmt.Println()
-	*/
+	flag.Parse()
 
-	if err := run(); err != nil {
+	args := flag.Args()
+	if len(args) == 0 {
+		fmt.Printf("error: pass an image file\n")
+		os.Exit(1)
+	}
+
+	filename := args[0]
+
+	if err := run(filename); err != nil {
 		log.Print(err)
 		os.Exit(1)
 	}
