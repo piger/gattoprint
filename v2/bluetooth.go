@@ -67,6 +67,11 @@ func SendCommands(queue [][]byte) error {
 		return err
 	}
 
+	notifyUUID, err := bluetooth.ParseUUID("0000ae02-0000-1000-8000-00805f9b34fb")
+	if err != nil {
+		return err
+	}
+
 	deviceAddr, err := FindDevice(adapter, "GB03")
 	if err != nil {
 		return err
@@ -127,6 +132,29 @@ func SendCommands(queue [][]byte) error {
 	*/
 
 	// SEMBRA SIA ROTTO ON MACOS, PORCODIO: https://github.com/tinygo-org/bluetooth/issues/68
+
+	for _, service := range services {
+		chs, err := service.DiscoverCharacteristics([]bluetooth.UUID{notifyUUID})
+		if err != nil {
+			return err
+		}
+		if len(chs) < 1 {
+			fmt.Printf("no notify characteristic found")
+			continue
+		}
+
+		not := chs[0]
+		fmt.Printf("enabling notifications:\n")
+		if err := not.EnableNotifications(func(buf []byte) {
+			fmt.Printf("got notification:\n")
+			for _, val := range buf {
+				fmt.Printf("0x%X ", val)
+			}
+			fmt.Println()
+		}); err != nil {
+			return err
+		}
+	}
 
 	fmt.Printf("trying to send commands\n")
 	for _, service := range services {

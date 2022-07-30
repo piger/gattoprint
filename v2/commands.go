@@ -16,6 +16,7 @@ var (
 	cmdOtherFeedPaper byte = 0xBD
 	cmdDrawBitmap     byte = 0xA2 // Line to draw. 0 bit -> don't draw pixel, 1 bit -> draw pixel
 	cmdFeedPaper      byte = 0xA1
+	cmdGetDevState    byte = 0xA3
 
 	cmdPrintLattice  []byte = []byte{0xAA, 0x55, 0x17, 0x38, 0x44, 0x5F, 0x5F, 0x5F, 0x44, 0x38, 0x2C}
 	cmdImgPrintSpeed []byte = []byte{0x23}
@@ -73,6 +74,9 @@ contrast = 1
 
 func PrintImage(img *image.Gray) [][]byte {
 	var queue [][]byte
+
+	c0 := formatMessage(cmdGetDevState, []byte{0x00})
+	queue = append(queue, c0)
 
 	// set quality to standard
 	c1 := formatMessage(cmdSetQuality, []byte{0x33})
