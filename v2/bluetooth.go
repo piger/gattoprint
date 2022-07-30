@@ -143,8 +143,12 @@ func SendCommands(queue [][]byte) error {
 		}
 
 		tx := chs[0]
+
+		fmt.Println("Sending commands:")
 		for _, cmd := range queue {
 			sendbuf := cmd
+
+			fmt.Print(".")
 
 			for len(sendbuf) != 0 {
 				partlen := 20
@@ -154,13 +158,16 @@ func SendCommands(queue [][]byte) error {
 
 				part := sendbuf[:partlen]
 				sendbuf = sendbuf[partlen:]
-				fmt.Printf("sending chunk...\n")
+				fmt.Print("+")
 				if _, err := tx.WriteWithoutResponse(part); err != nil {
 					return err
 				}
 				time.Sleep(time.Millisecond * 10)
 			}
 		}
+		fmt.Println()
+		fmt.Println("Waiting 30 seconds for the printer to finish")
+		time.Sleep(30 * time.Second)
 	}
 
 	return nil
