@@ -115,11 +115,13 @@ func run() error {
 }
 
 func main() {
-	gh := convert(checksumTable)
-	for _, i := range gh {
-		fmt.Printf("0x%X ", i)
-	}
-	fmt.Println()
+	/*
+		gh := convert(checksumTable)
+		for _, i := range gh {
+			fmt.Printf("0x%X ", i)
+		}
+		fmt.Println()
+	*/
 
 	if err := run(); err != nil {
 		log.Print(err)
