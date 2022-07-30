@@ -127,28 +127,54 @@ func PrintImage(img *image.Gray) [][]byte {
 		}
 	*/
 
-	for i := 0; i < len(img.Pix); i += img.Stride {
+	/*
+		for i := 0; i < len(img.Pix); i += img.Stride {
+			var bmp []byte
+			var bit byte
+
+			row := img.Pix[i : i+img.Stride]
+			for _, val := range row {
+				if bit%8 == 0 {
+					bmp = append(bmp, 0x00)
+				}
+
+				bmp[bit/8] >>= 1
+
+				// fmt.Printf("val = 0x%X\n", val)
+				if val == 0 {
+					bmp[bit/8] |= 0x80
+				} else {
+					bmp[bit/8] |= 0
+				}
+
+				bit += 1
+			}
+
+			cc := formatMessage(cmdDrawBitmap, bmp)
+			queue = append(queue, cc)
+		}
+	*/
+	b := img.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
 		var bmp []byte
 		var bit byte
+		index := 0
 
-		row := img.Pix[i : i+img.Stride]
-		for _, val := range row {
-			if bit%8 == 0 {
-				bmp = append(bmp, 0x00)
-			}
-
-			bmp[bit/8] >>= 1
-
-			// fmt.Printf("val = 0x%X\n", val)
-			if val == 0 {
-				bmp[bit/8] |= 0x80
+		for x := b.Min.X; x < b.Max.X; x++ {
+			pixel := img.At(x, y)
+			r, g, b, _ := pixel.RGBA()
+			if r == 0 && g == 0 && b == 0 {
+				bit |= 0
 			} else {
-				bmp[bit/8] |= 0
+				bit |= 1 << index
 			}
-
-			bit += 1
+			index++
+			if index == 8 {
+				index = 0
+				bmp = append(bmp, bit)
+				bit = 0
+			}
 		}
-
 		cc := formatMessage(cmdDrawBitmap, bmp)
 		queue = append(queue, cc)
 	}
