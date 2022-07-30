@@ -6,6 +6,8 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// see sources/com/blueUtils/BluetoothOrder.java
+
 var (
 	cmdSetQuality     byte = 0xA4
 	cmdControlLattice byte = 0xA6
@@ -19,6 +21,26 @@ var (
 	cmdImgPrintSpeed []byte = []byte{0x23}
 	cmdFinishLattice []byte = []byte{0xAA, 0x55, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}
 	cmdBlankSpeed    []byte = []byte{0x19}
+
+	// QUALITIES
+	// 0x31 0x32 0x33 0x34 0x35 (49, 50, 51, 52, 53 in Java)
+
+	// PRINT_COMMANDS
+	// 0xA2 0xBF (fixed length, run-length)
+
+	// CMD_SET_PAPER (which is cmdFeedPaper)
+	// [0x51 0x78] 0xA1 0x0 0x2 0x0 0x30 0x0 0xF9 0xFF
+
+	// CMD_SET_QUALITY_200_DPI
+	// 0x51 0x78 0xA4 0x0 0x1 0x0 0x32 0x9E 0xFF
+	// ^^^^ ^^^^ prefix
+	//           ^^^^ command
+	//                ^^^ empty
+	//                    ^^^ length
+	//                            ^^^^ data
+	//                                 ^^^^ checksum
+	//                                      ^^^^ closing
+	// cmd200DPI []byte = []byte{0x01, 0x00, 0x32, 0x9E, 0xFF}
 )
 
 func formatMessage(command byte, data []byte) []byte {
