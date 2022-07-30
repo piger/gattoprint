@@ -2,6 +2,8 @@ package v2
 
 import (
 	"image"
+
+	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -11,10 +13,12 @@ var (
 	cmdDrawingMode    byte = 0xBE // 1 for text, 0 for images
 	cmdOtherFeedPaper byte = 0xBD
 	cmdDrawBitmap     byte = 0xA2 // Line to draw. 0 bit -> don't draw pixel, 1 bit -> draw pixel
+	cmdFeedPaper      byte = 0xA1
 
 	cmdPrintLattice  []byte = []byte{0xAA, 0x55, 0x17, 0x38, 0x44, 0x5F, 0x5F, 0x5F, 0x44, 0x38, 0x2C}
 	cmdImgPrintSpeed []byte = []byte{0x23}
 	cmdFinishLattice []byte = []byte{0xAA, 0x55, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}
+	cmdBlankSpeed    []byte = []byte{0x19}
 )
 
 func formatMessage(command byte, data []byte) []byte {
@@ -100,5 +104,24 @@ func PrintImage(img *image.Gray) [][]byte {
 	c6 := formatMessage(cmdControlLattice, cmdFinishLattice)
 	queue = append(queue, c6)
 
+	// feed some empty lines
+	// feed_lines = 112
+	c7 := formatMessage(cmdOtherFeedPaper, cmdBlankSpeed)
+	queue = append(queue, c7)
+
+	count := 112
+	for count > 0 {
+		feed := min(count, 0xFF)
+		queue = append(queue, formatMessage(cmdFeedPaper, printerShort(feed)))
+		count = count - feed
+	}
+
 	return queue
+}
+
+func min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
 }

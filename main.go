@@ -137,7 +137,6 @@ func run(filename string) error {
 	}
 
 	queue := v2.PrintImage(goo)
-	return nil
 
 	if err := v2.SendCommands(queue); err != nil {
 		fmt.Printf("error sending commands: %s\n", err)
