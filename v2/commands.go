@@ -74,6 +74,37 @@ func PrintImage(img *image.Gray) [][]byte {
 	queue = append(queue, c5)
 
 	// here goes all the rows
+	/*
+		b := img.Bounds()
+		for y := b.Min.Y; y < b.Max.Y; y++ {
+			var bmp []byte
+			var bit byte
+
+			for x := b.Min.X; x < b.Max.X; x++ {
+				if bit%8 == 0 {
+					bmp = append(bmp, 0x00)
+				}
+
+				bmp[bit/8] >>= 1
+				// fmt.Printf("color at x=%d, y=%d: %+v\n", x, y, img.At(x, y))
+				pixel := img.At(x, y)
+				r, g, b, _ := pixel.RGBA()
+				// fmt.Printf("r=%d, g=%d, b=%d, a=%d\n", r, g, b, a)
+
+				if r == 0 && g == 0 && b == 0 {
+					// if img.At(x, y) == color.Black {
+					bmp[bit/8] |= 0x80
+				} else {
+					bmp[bit/8] |= 0
+				}
+
+				bit += 1
+			}
+			cc := formatMessage(cmdDrawBitmap, bmp)
+			queue = append(queue, cc)
+		}
+	*/
+
 	for i := 0; i < len(img.Pix); i += img.Stride {
 		var bmp []byte
 		var bit byte
