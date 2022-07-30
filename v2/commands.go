@@ -164,9 +164,10 @@ func PrintImage(img *image.Gray) [][]byte {
 			pixel := img.At(x, y)
 			r, g, b, _ := pixel.RGBA()
 			if r == 0 && g == 0 && b == 0 {
-				bit |= 0
-			} else {
 				bit |= 1 << index
+
+			} else {
+				bit |= 0
 			}
 			index++
 			if index == 8 {
