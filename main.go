@@ -53,8 +53,15 @@ func runBluetoothTest() error {
 	return nil
 }
 
+func blackOrWhite(g color.Gray) color.Gray {
+	if g.Y < 127 {
+		return color.Gray{0} // Black
+	}
+	return color.Gray{255} // White
+}
+
 func run() error {
-	fd, err := os.Open("gigachad.jpg")
+	fd, err := os.Open("groucho-marx.jpg")
 	if err != nil {
 		return err
 	}
@@ -75,6 +82,8 @@ func run() error {
 
 	dstImage := imaging.Resize(im, PrintWidth, newHeight, imaging.Lanczos)
 
+	// XXX: we should do padding so that the image matches the print width!
+
 	newBounds := dstImage.Bounds()
 	gray := image.NewGray(newBounds)
 	for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
@@ -84,20 +93,32 @@ func run() error {
 		}
 	}
 
+	white := image.NewGray(newBounds)
+	for i := range white.Pix {
+		white.Pix[i] = 255
+	}
+
+	for x := newBounds.Min.X; x < newBounds.Dx(); x++ {
+		for y := newBounds.Min.Y; y < newBounds.Dy(); y++ {
+			c := blackOrWhite(gray.GrayAt(x, y))
+			white.Set(x, y, c)
+		}
+	}
+
 	ditherer := ditherers[0]
 	goo := ditherer.Monochrome(gray, float32(ErrMul))
 
-	b := gray.Bounds()
-	fmt.Printf("gray image: width=%d, height=%d, stride=%d\n", b.Dx(), b.Dy(), gray.Stride)
-	fmt.Printf("len pix = %d\n", len(gray.Pix))
+	b := white.Bounds()
+	fmt.Printf("gray image: width=%d, height=%d, stride=%d\n", b.Dx(), b.Dy(), white.Stride)
+	fmt.Printf("len pix = %d\n", len(white.Pix))
 
 	// this is how you read an image "line by line"?
-	for i := 0; i < len(gray.Pix); i += gray.Stride {
-		row := gray.Pix[i : i+gray.Stride]
+	for i := 0; i < len(white.Pix); i += white.Stride {
+		row := white.Pix[i : i+white.Stride]
 		fmt.Printf("len(row) = %d\n", len(row))
 	}
 
-	fmt.Printf("Color Model: %+v\n", gray.ColorModel() == color.GrayModel)
+	fmt.Printf("Color Model: %+v\n", white.ColorModel() == color.GrayModel)
 
 	out, err := os.Create("output.png")
 	if err != nil {
@@ -109,8 +130,8 @@ func run() error {
 		return err
 	}
 
-	queue := v2.PrintImage(gray)
-	return nil
+	queue := v2.PrintImage(goo.(*image.Gray))
+
 	if err := v2.SendCommands(queue); err != nil {
 		fmt.Printf("error sending commands: %s\n", err)
 	}
