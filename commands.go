@@ -104,12 +104,12 @@ func printImage(im image.Gray, darkMode bool) {
 
 		goop := []int8{81, 120, -65, 0, int8(len(encRow)), 0}
 		// mmmh; int8 goes from -128 to 127!
-		goop2 := []int8{0, 0xff}
+		// goop2 := []int8{0, 0xff}
 
 		// goop3 is uint8
 		goop3 := convert(goop)
 		goop3 = append(goop3, encRow...)
-		goop3 = append(goop3, convert(goop2)...)
+		// goop3 = append(goop3, convert(goop2)...)
 		checksumGoop := checksum(goop3, 6, len(encRow))
 		goop3[len(goop3)-2] = checksumGoop
 	}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	dither "github.com/esimov/dithergo"
+	v2 "github.com/piger/gattoprint/v2"
 	"tinygo.org/x/bluetooth"
 )
 
@@ -106,6 +107,12 @@ func run() error {
 
 	if err := png.Encode(out, goo); err != nil {
 		return err
+	}
+
+	queue := v2.PrintImage(gray)
+	return nil
+	if err := v2.SendCommands(queue); err != nil {
+		fmt.Printf("error sending commands: %s\n", err)
 	}
 
 	// NOTE: the original code "invert" the image using the "~" operator...

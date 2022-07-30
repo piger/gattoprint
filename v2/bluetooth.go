@@ -1,21 +1,37 @@
 package v2
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"tinygo.org/x/bluetooth"
 )
 
-func findDevice(adapter *bluetooth.Adapter, name string) (bluetooth.Addresser, error) {
+func FindDevice(adapter *bluetooth.Adapter, name string) (bluetooth.Addresser, error) {
 	var result bluetooth.Addresser
+
+	count := 0
 
 	err := adapter.Scan(func(adapter *bluetooth.Adapter, device bluetooth.ScanResult) {
 		if device.LocalName() == "GB03" {
+			fmt.Printf("GB03 found\n")
+
 			if err := adapter.StopScan(); err != nil {
 				fmt.Printf("error stopping scan: %s\n", err)
 				return
 			}
 			result = device.Address
+			return
+		}
+
+		count += 1
+		if count > 100 {
+			fmt.Printf("device not found\n")
+			if err := adapter.StopScan(); err != nil {
+				fmt.Printf("error stopping scan: %s\n", err)
+			}
+			return
 		}
 	})
 
@@ -26,7 +42,7 @@ func findDevice(adapter *bluetooth.Adapter, name string) (bluetooth.Addresser, e
 	return result, nil
 }
 
-func sendCommands(queue [][]byte) error {
+func SendCommands(queue [][]byte) error {
 	var adapter = bluetooth.DefaultAdapter
 	if err := adapter.Enable(); err != nil {
 		return err
@@ -37,22 +53,29 @@ func sendCommands(queue [][]byte) error {
 		return err
 	}
 
-	uuid2, err := bluetooth.ParseUUID("0000af30-0000-1000-8000-00805f9b34fb")
-	if err != nil {
-		return err
-	}
+	/*
+		uuid2, err := bluetooth.ParseUUID("0000af30-0000-1000-8000-00805f9b34fb")
+		if err != nil {
+			return err
+		}
+	*/
 
 	// TX_CHARACTERISTIC_UUID = '0000ae01-0000-1000-8000-00805f9b34fb'
+	// gb01print.py uses:        0000AE01-0000-1000-8000-00805F9B34FB
 	uuid3, err := bluetooth.ParseUUID("0000ae01-0000-1000-8000-00805f9b34fb")
 	if err != nil {
 		return err
 	}
 
-	deviceAddr, err := findDevice(adapter, "GB03")
+	deviceAddr, err := FindDevice(adapter, "GB03")
 	if err != nil {
 		return err
 	}
+	if deviceAddr == nil {
+		return errors.New("device not found")
+	}
 
+	fmt.Printf("connecting to device\n")
 	device, err := adapter.Connect(deviceAddr, bluetooth.ConnectionParams{})
 	if err != nil {
 		return err
@@ -63,16 +86,60 @@ func sendCommands(queue [][]byte) error {
 		}
 	}()
 
-	services, err := device.DiscoverServices([]bluetooth.UUID{uuid1, uuid2})
+	// services I'm finding:
+	// ae300000-0000-0000-0000-000000000000
+	// ae3a0000-0000-0000-0000-000000000000
+
+	fmt.Printf("discovering services\n")
+	services, err := device.DiscoverServices([]bluetooth.UUID{uuid1})
+	// services, err := device.DiscoverServices([]bluetooth.UUID{})
 	if err != nil {
 		return err
 	}
 
+	if len(services) == 0 {
+		return errors.New("no services")
+	}
+
+	for _, service := range services {
+		fmt.Printf("discovering characteristics on: %s\n", service)
+		chs, err := service.DiscoverCharacteristics([]bluetooth.UUID{})
+		if err != nil {
+			return err
+		}
+
+		for _, ch := range chs {
+			fmt.Printf("found characteristic: %s\n", ch)
+		}
+	}
+
+	/*
+		discovering characteristics on: ae300000-0000-0000-0000-000000000000
+		found characteristic: ae010000-0000-0000-0000-000000000000
+		found characteristic: ae020000-0000-0000-0000-000000000000
+		found characteristic: ae030000-0000-0000-0000-000000000000
+		found characteristic: ae040000-0000-0000-0000-000000000000
+		found characteristic: ae050000-0000-0000-0000-000000000000
+		found characteristic: ae100000-0000-0000-0000-000000000000
+		discovering characteristics on: ae3a0000-0000-0000-0000-000000000000
+		found characteristic: ae3b0000-0000-0000-0000-000000000000
+		found characteristic: ae3c0000-0000-0000-0000-000000000000
+	*/
+
+	// SEMBRA SIA ROTTO ON MACOS, PORCODIO: https://github.com/tinygo-org/bluetooth/issues/68
+
+	fmt.Printf("trying to send commands\n")
 	for _, service := range services {
 		fmt.Printf("service: %v\n", service)
+
 		chs, err := service.DiscoverCharacteristics([]bluetooth.UUID{uuid3})
 		if err != nil {
 			return err
+		}
+
+		if len(chs) < 1 {
+			fmt.Printf("no characteristics found\n")
+			continue
 		}
 
 		tx := chs[0]
@@ -87,90 +154,13 @@ func sendCommands(queue [][]byte) error {
 
 				part := sendbuf[:partlen]
 				sendbuf = sendbuf[partlen:]
+				fmt.Printf("sending chunk...\n")
 				if _, err := tx.WriteWithoutResponse(part); err != nil {
 					return err
 				}
+				time.Sleep(time.Millisecond * 10)
 			}
 		}
-	}
-
-	return nil
-}
-
-func sendPayload(payload []byte) error {
-	var adapter = bluetooth.DefaultAdapter
-	if err := adapter.Enable(); err != nil {
-		return err
-	}
-
-	/*
-		POSSIBLE_SERVICE_UUIDS = [
-		'0000ae30-0000-1000-8000-00805f9b34fb',
-		'0000af30-0000-1000-8000-00805f9b34fb',
-		]
-	*/
-
-	uuid1, err := bluetooth.ParseUUID("0000ae30-0000-1000-8000-00805f9b34fb")
-	if err != nil {
-		return err
-	}
-
-	uuid2, err := bluetooth.ParseUUID("0000af30-0000-1000-8000-00805f9b34fb")
-	if err != nil {
-		return err
-	}
-
-	// TX_CHARACTERISTIC_UUID = '0000ae01-0000-1000-8000-00805f9b34fb'
-	uuid3, err := bluetooth.ParseUUID("0000ae01-0000-1000-8000-00805f9b34fb")
-	if err != nil {
-		return err
-	}
-
-	err = adapter.Scan(func(adapter *bluetooth.Adapter, device bluetooth.ScanResult) {
-		fmt.Printf("found device: %s %d %s\n", device.Address.String(), device.RSSI, device.LocalName())
-
-		if device.LocalName() == "GB03" {
-			// do stuff
-			params := bluetooth.ConnectionParams{}
-			d, err := adapter.Connect(device.Address, params)
-			if err != nil {
-				fmt.Printf("error: %s\n", err)
-				return
-			}
-
-			services, err := d.DiscoverServices([]bluetooth.UUID{uuid1, uuid2})
-			if err != nil {
-				fmt.Printf("error: %s\n", err)
-				return
-			}
-
-			for _, service := range services {
-				chs, err := service.DiscoverCharacteristics([]bluetooth.UUID{uuid3})
-				if err != nil {
-					fmt.Printf("error: %s\n", err)
-					continue
-				}
-
-				tx := chs[0]
-				sendbuf := payload
-
-				for len(sendbuf) != 0 {
-					partlen := 20
-					if len(sendbuf) < 20 {
-						partlen = len(sendbuf)
-					}
-					part := sendbuf[:partlen]
-					sendbuf = sendbuf[partlen:]
-					if _, err := tx.WriteWithoutResponse(part); err != nil {
-						fmt.Printf("error writing: %s\n", err)
-					}
-				}
-			}
-
-		}
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil
