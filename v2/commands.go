@@ -56,6 +56,7 @@ func PrintImage(img *image.Gray) [][]byte {
 	c2 := formatMessage(cmdControlLattice, cmdPrintLattice)
 	queue = append(queue, c2)
 
+	// Set energy used
 	var contrast int = 12000
 	c3 := formatMessage(cmdSetEnergy, printerShort(contrast))
 	queue = append(queue, c3)
@@ -64,6 +65,7 @@ func PrintImage(img *image.Gray) [][]byte {
 	c4 := formatMessage(cmdDrawingMode, []byte{0})
 	queue = append(queue, c4)
 
+	// not entirely sure what this does
 	c5 := formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed)
 	queue = append(queue, c5)
 
@@ -94,6 +96,7 @@ func PrintImage(img *image.Gray) [][]byte {
 		queue = append(queue, cc)
 	}
 
+	// finish the lattice, whatever that means
 	c6 := formatMessage(cmdControlLattice, cmdFinishLattice)
 	queue = append(queue, c6)
 

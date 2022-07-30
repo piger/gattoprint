@@ -79,6 +79,8 @@ func ConvertImage(filename string) (*image.Gray, error) {
 	}
 
 	imgDithered := ditherer.Monochrome(imgGray, float32(ErrMul))
+	b = imgDithered.Bounds()
+	log.Printf("dithered size: %dx%d", b.Dx(), b.Dy())
 
 	return imgDithered.(*image.Gray), nil
 }
