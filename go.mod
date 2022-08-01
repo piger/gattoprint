@@ -6,6 +6,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/esimov/dithergo v0.0.0-20210215145655-7f9ddf55e848
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
 	tinygo.org/x/bluetooth v0.5.0
 )
 
@@ -19,5 +20,4 @@ require (
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
-	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 )
