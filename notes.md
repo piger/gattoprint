@@ -18,3 +18,10 @@ found characteristic: 0000ae02-0000-1000-8000-00805f9b34fb
 
 service: 0000ae3a-0000-1000-8000-00805f9b34fb
 ```
+
+```
+notification (getDevState):
+0x51 0x78 0xA3 0x1 0x3 0x0 0x0 0xE 0x24 0x2A 0xFF
+[--------] header                       crc? [tail]
+          0xA3 = cmdGetDevState
+```
