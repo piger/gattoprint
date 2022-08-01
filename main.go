@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	flagOutput  = flag.String("output", "output.png", "Output file name, for preview")
-	flagNoPrint = flag.Bool("no-print", false, "Disable printing, just create the preview")
+	flagDeviceName = flag.String("printer-name", "GB03", "Name advertised by the printer")
+	flagOutput     = flag.String("output", "output.png", "Output file name, for preview")
+	flagNoPrint    = flag.Bool("no-print", false, "Disable printing, just create the preview")
 )
 
 func run(filename string) error {
@@ -45,11 +46,11 @@ func run(filename string) error {
 	if err := adapter.Enable(); err != nil {
 		return err
 	}
-	addr, err := bt.FindDevice("GB03", adapter)
+	addr, err := bt.FindDevice(*flagDeviceName, adapter)
 	if err != nil {
 		return err
 	}
-	fmt.Println("found: ", addr)
+	log.Printf("found %s: %s", *flagDeviceName, addr)
 
 	if err := bt.SendCommands(adapter, addr, queue); err != nil {
 		return err
