@@ -75,8 +75,8 @@ contrast = 1
 func PrintImage(img *image.Gray) [][]byte {
 	var queue [][]byte
 
-	c0 := formatMessage(cmdGetDevState, []byte{0x00})
-	queue = append(queue, c0)
+	//c0 := formatMessage(cmdGetDevState, []byte{0x00})
+	//queue = append(queue, c0)
 
 	// set quality to standard
 	c1 := formatMessage(cmdSetQuality, []byte{0x33})
@@ -199,6 +199,9 @@ func PrintImage(img *image.Gray) [][]byte {
 		queue = append(queue, formatMessage(cmdFeedPaper, printerShort(feed)))
 		count = count - feed
 	}
+
+	c8 := formatMessage(cmdGetDevState, []byte{0x00})
+	queue = append(queue, c8)
 
 	return queue
 }
