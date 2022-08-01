@@ -7,6 +7,10 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
+const (
+	printWaitTime = 30 * time.Second
+)
+
 type PrinterCommand []byte
 
 func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands [][]byte) error {
@@ -63,13 +67,14 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 		}
 	}
 	fmt.Println()
-	fmt.Println("Waiting at least 30 seconds for the printer to finish")
+	fmt.Println("Waiting for the printer to finish printing...")
 
-	t := time.NewTimer(30 * time.Second)
+	t := time.NewTimer(printWaitTime)
 	defer t.Stop()
 
 	select {
 	case <-t.C:
+		fmt.Printf("%s passed but the printer didn't signal that finished printing", printWaitTime)
 	case <-notifChan:
 	}
 
