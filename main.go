@@ -7,7 +7,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/piger/gattoprint/internal/bt"
 	v2 "github.com/piger/gattoprint/v2"
+	"tinygo.org/x/bluetooth"
 )
 
 var (
@@ -39,9 +41,25 @@ func run(filename string) error {
 		return nil
 	}
 
-	if err := v2.SendCommands(queue); err != nil {
-		fmt.Printf("error sending commands: %s\n", err)
+	var adapter = bluetooth.DefaultAdapter
+	if err := adapter.Enable(); err != nil {
+		return err
 	}
+	addr, err := bt.FindDevice("GB03", adapter)
+	if err != nil {
+		return err
+	}
+	fmt.Println("found: ", addr)
+
+	if err := bt.SendCommands(adapter, addr, queue); err != nil {
+		return err
+	}
+
+	/*
+		if err := v2.SendCommands(queue); err != nil {
+			fmt.Printf("error sending commands: %s\n", err)
+		}
+	*/
 
 	// NOTE: the original code "invert" the image using the "~" operator...
 	// https://stackoverflow.com/questions/8305199/the-tilde-operator-in-python
