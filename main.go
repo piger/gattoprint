@@ -8,7 +8,9 @@ import (
 	"os"
 
 	"github.com/piger/gattoprint/internal/bt"
-	v2 "github.com/piger/gattoprint/v2"
+	"github.com/piger/gattoprint/internal/commands"
+	"github.com/piger/gattoprint/internal/graphics"
+
 	"tinygo.org/x/bluetooth"
 )
 
@@ -18,7 +20,7 @@ var (
 )
 
 func run(filename string) error {
-	goo, err := v2.ConvertImage(filename)
+	goo, err := graphics.ConvertImage(filename)
 	if err != nil {
 		return err
 	}
@@ -33,7 +35,7 @@ func run(filename string) error {
 		return err
 	}
 
-	queue := v2.PrintImage(goo)
+	queue := commands.PrintImage(goo)
 
 	if *flagNoPrint {
 		return nil
