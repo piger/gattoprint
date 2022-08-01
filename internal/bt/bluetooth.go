@@ -2,6 +2,7 @@ package bt
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"tinygo.org/x/bluetooth"
@@ -43,7 +44,7 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 		return fmt.Errorf("error enabling notifications: %w", err)
 	}
 
-	fmt.Println("Sending commands:")
+	log.Println("sending commands to printer")
 	for _, cmd := range commands {
 		sendbuf := cmd
 
@@ -65,14 +66,14 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 		}
 	}
 	fmt.Println()
-	fmt.Println("Waiting for the printer to finish printing...")
+	log.Println("waiting for the printer to finish printing")
 
 	t := time.NewTimer(printWaitTime)
 	defer t.Stop()
 
 	select {
 	case <-t.C:
-		fmt.Printf("%s passed but the printer didn't signal that finished printing", printWaitTime)
+		log.Printf("%s passed but the printer didn't signal that finished printing", printWaitTime)
 	case <-notifChan:
 	}
 
