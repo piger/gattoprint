@@ -27,12 +27,19 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 
 	printService := services[0]
 
-	characteristics, err := printService.DiscoverCharacteristics([]bluetooth.UUID{*WriteUUID})
+	characteristics, err := printService.DiscoverCharacteristics([]bluetooth.UUID{*WriteUUID, *NotificationUUID})
 	if err != nil {
 		return fmt.Errorf("failed to get write characteristic: %w", err)
 	}
 
-	tx := characteristics[0]
+	tx, notif := characteristics[0], characteristics[1]
+	notifChan := make(chan struct{}, 1)
+
+	if err := notif.EnableNotifications(func(buf []byte) {
+		notifChan <- struct{}{}
+	}); err != nil {
+		return fmt.Errorf("error enabling notifications: %w", err)
+	}
 
 	fmt.Println("Sending commands:")
 	for _, cmd := range commands {
@@ -56,8 +63,15 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 		}
 	}
 	fmt.Println()
-	fmt.Println("Waiting 30 seconds for the printer to finish")
-	time.Sleep(30 * time.Second)
+	fmt.Println("Waiting at least 30 seconds for the printer to finish")
+
+	t := time.NewTimer(30 * time.Second)
+	defer t.Stop()
+
+	select {
+	case <-t.C:
+	case <-notifChan:
+	}
 
 	return nil
 }
