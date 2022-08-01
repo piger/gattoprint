@@ -1,3 +1,5 @@
 *.png
 *.jpeg
 *.jpg
+/gattoprint
+*.py

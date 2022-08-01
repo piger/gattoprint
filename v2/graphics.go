@@ -59,7 +59,6 @@ func ConvertImage(filename string) (*image.Gray, error) {
 	factor := float64(PrintWidth) / float64(width)
 	newHeight := int(float64(height) * factor)
 
-	// I should try Fit()!
 	imgResized := imaging.Fit(img, PrintWidth, newHeight, imaging.Lanczos)
 	b = imgResized.Bounds()
 	log.Printf("resized to: %dx%d", b.Dx(), b.Dy())

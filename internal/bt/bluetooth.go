@@ -11,8 +11,6 @@ const (
 	printWaitTime = 30 * time.Second
 )
 
-type PrinterCommand []byte
-
 func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands [][]byte) error {
 	device, err := adapter.Connect(address, bluetooth.ConnectionParams{})
 	if err != nil {

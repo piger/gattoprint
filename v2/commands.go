@@ -75,9 +75,6 @@ contrast = 1
 func PrintImage(img *image.Gray) [][]byte {
 	var queue [][]byte
 
-	//c0 := formatMessage(cmdGetDevState, []byte{0x00})
-	//queue = append(queue, c0)
-
 	// set quality to standard
 	c1 := formatMessage(cmdSetQuality, []byte{0x33})
 	queue = append(queue, c1)
@@ -99,65 +96,6 @@ func PrintImage(img *image.Gray) [][]byte {
 	c5 := formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed)
 	queue = append(queue, c5)
 
-	// here goes all the rows
-	/*
-		b := img.Bounds()
-		for y := b.Min.Y; y < b.Max.Y; y++ {
-			var bmp []byte
-			var bit byte
-
-			for x := b.Min.X; x < b.Max.X; x++ {
-				if bit%8 == 0 {
-					bmp = append(bmp, 0x00)
-				}
-
-				bmp[bit/8] >>= 1
-				// fmt.Printf("color at x=%d, y=%d: %+v\n", x, y, img.At(x, y))
-				pixel := img.At(x, y)
-				r, g, b, _ := pixel.RGBA()
-				// fmt.Printf("r=%d, g=%d, b=%d, a=%d\n", r, g, b, a)
-
-				if r == 0 && g == 0 && b == 0 {
-					// if img.At(x, y) == color.Black {
-					bmp[bit/8] |= 0x80
-				} else {
-					bmp[bit/8] |= 0
-				}
-
-				bit += 1
-			}
-			cc := formatMessage(cmdDrawBitmap, bmp)
-			queue = append(queue, cc)
-		}
-	*/
-
-	/*
-		for i := 0; i < len(img.Pix); i += img.Stride {
-			var bmp []byte
-			var bit byte
-
-			row := img.Pix[i : i+img.Stride]
-			for _, val := range row {
-				if bit%8 == 0 {
-					bmp = append(bmp, 0x00)
-				}
-
-				bmp[bit/8] >>= 1
-
-				// fmt.Printf("val = 0x%X\n", val)
-				if val == 0 {
-					bmp[bit/8] |= 0x80
-				} else {
-					bmp[bit/8] |= 0
-				}
-
-				bit += 1
-			}
-
-			cc := formatMessage(cmdDrawBitmap, bmp)
-			queue = append(queue, cc)
-		}
-	*/
 	b := img.Bounds()
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		var bmp []byte
@@ -200,6 +138,8 @@ func PrintImage(img *image.Gray) [][]byte {
 		count = count - feed
 	}
 
+	// use a GetDevState request as a way for the printer to signal that it finished
+	// printing its current job.
 	c8 := formatMessage(cmdGetDevState, []byte{0x00})
 	queue = append(queue, c8)
 

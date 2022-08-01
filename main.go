@@ -17,8 +17,6 @@ var (
 	flagNoPrint = flag.Bool("no-print", false, "Disable printing, just create the preview")
 )
 
-// my printer: 657b44c5-d2b2-69e2-2c52-f33aecfb4a6f -70 GB03
-
 func run(filename string) error {
 	goo, err := v2.ConvertImage(filename)
 	if err != nil {
@@ -54,15 +52,6 @@ func run(filename string) error {
 	if err := bt.SendCommands(adapter, addr, queue); err != nil {
 		return err
 	}
-
-	/*
-		if err := v2.SendCommands(queue); err != nil {
-			fmt.Printf("error sending commands: %s\n", err)
-		}
-	*/
-
-	// NOTE: the original code "invert" the image using the "~" operator...
-	// https://stackoverflow.com/questions/8305199/the-tilde-operator-in-python
 
 	return nil
 }
