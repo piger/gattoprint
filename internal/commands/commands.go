@@ -26,36 +26,29 @@ var (
 
 	qualityStandard = []byte{0x33}
 
+	cmdStart = []byte{0x51, 0x78}
+	cmdEnd   = []byte{0xFF}
+
 	// QUALITIES
 	// 0x31 0x32 0x33 0x34 0x35 (49, 50, 51, 52, 53 in Java)
 
 	// PRINT_COMMANDS
 	// 0xA2 0xBF (fixed length, run-length)
-
-	// CMD_SET_PAPER (which is cmdFeedPaper)
-	// [0x51 0x78] 0xA1 0x0 0x2 0x0 0x30 0x0 0xF9 0xFF
-
-	// CMD_SET_QUALITY_200_DPI
-	// 0x51 0x78 0xA4 0x0 0x1 0x0 0x32 0x9E 0xFF
-	// ^^^^ ^^^^ prefix
-	//           ^^^^ command
-	//                ^^^ empty
-	//                    ^^^ length
-	//                            ^^^^ data
-	//                                 ^^^^ checksum
-	//                                      ^^^^ closing
-	// cmd200DPI []byte = []byte{0x01, 0x00, 0x32, 0x9E, 0xFF}
 )
 
-func formatMessage(command byte, data []byte) []byte {
-	result := []byte{
-		0x51, 0x78, command, 0x00, byte(len(data)), 0x00,
-	}
-	result = append(result, data...)
-	crc := crc8(data)
-	result = append(result, crc)
-	result = append(result, 0xFF)
-	return result
+func formatMessage(cmd byte, data []byte) []byte {
+	msg := new(bytes.Buffer)
+
+	msg.Write(cmdStart)
+	msg.WriteByte(cmd)
+	msg.WriteByte(0x00)
+	msg.WriteByte(byte(len(data)))
+	msg.WriteByte(0x00)
+	msg.Write(data)
+	msg.WriteByte(crc8(data))
+	msg.Write(cmdEnd)
+
+	return msg.Bytes()
 }
 
 // binary.Write(buf, binary.LittleEndian, i)
