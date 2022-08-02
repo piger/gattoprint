@@ -18,10 +18,10 @@ var (
 	cmdFeedPaper      byte = 0xA1
 	cmdGetDevState    byte = 0xA3
 
-	cmdPrintLattice  []byte = []byte{0xAA, 0x55, 0x17, 0x38, 0x44, 0x5F, 0x5F, 0x5F, 0x44, 0x38, 0x2C}
-	cmdImgPrintSpeed []byte = []byte{0x23}
-	cmdFinishLattice []byte = []byte{0xAA, 0x55, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}
-	cmdBlankSpeed    []byte = []byte{0x19}
+	cmdPrintLattice  = []byte{0xAA, 0x55, 0x17, 0x38, 0x44, 0x5F, 0x5F, 0x5F, 0x44, 0x38, 0x2C}
+	cmdImgPrintSpeed = []byte{0x23}
+	cmdFinishLattice = []byte{0xAA, 0x55, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}
+	cmdBlankSpeed    = []byte{0x19}
 
 	// QUALITIES
 	// 0x31 0x32 0x33 0x34 0x35 (49, 50, 51, 52, 53 in Java)
@@ -45,7 +45,7 @@ var (
 )
 
 func formatMessage(command byte, data []byte) []byte {
-	var result []byte = []byte{
+	result := []byte{
 		0x51, 0x78, command, 0x00, byte(len(data)), 0x00,
 	}
 	result = append(result, data...)
@@ -56,7 +56,7 @@ func formatMessage(command byte, data []byte) []byte {
 }
 
 func printerShort(i int) []byte {
-	var result []byte = []byte{
+	result := []byte{
 		byte(i & 0xFF), byte((i >> 8) & 0xFF),
 	}
 	return result
@@ -135,7 +135,7 @@ func PrintImage(img *image.Gray) [][]byte {
 	for count > 0 {
 		feed := min(count, 0xFF)
 		queue = append(queue, formatMessage(cmdFeedPaper, printerShort(feed)))
-		count = count - feed
+		count -= feed
 	}
 
 	// use a GetDevState request as a way for the printer to signal that it finished

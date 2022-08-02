@@ -72,7 +72,7 @@ func FindDevice(name string, adapter *bluetooth.Adapter) (bluetooth.Addresser, e
 
 		case <-ticker.C:
 			fmt.Printf("\r%s Scanning...", chars[idx])
-			idx += 1
+			idx++
 			if idx >= l {
 				idx = 0
 			}
