@@ -36,11 +36,11 @@ func run(filename string) error {
 		return fmt.Errorf("error encoding preview: %w", err)
 	}
 
-	queue := commands.PrintImage(goo)
-
 	if *flagNoPrint {
 		return nil
 	}
+
+	cmds := commands.PrintImage(goo)
 
 	var adapter = bluetooth.DefaultAdapter
 	if err := adapter.Enable(); err != nil {
@@ -54,7 +54,7 @@ func run(filename string) error {
 
 	log.Printf("found %s: %s", *flagDeviceName, addr)
 
-	if err := bt.SendCommands(adapter, addr, queue); err != nil {
+	if err := bt.SendCommands(adapter, addr, cmds); err != nil {
 		return fmt.Errorf("error sending commands to printer: %w", err)
 	}
 

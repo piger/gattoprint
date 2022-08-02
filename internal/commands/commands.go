@@ -106,49 +106,53 @@ func encodeImgRows(img *image.Gray) chan []byte {
 	return out
 }
 
-func PrintImage(img *image.Gray) [][]byte {
-	var queue [][]byte
+func PrintImage(img *image.Gray) chan []byte {
+	cmds := make(chan []byte)
 
-	// set quality to standard
-	queue = append(queue, formatMessage(cmdSetQuality, qualityStandard))
+	go func() {
+		// set quality to standard
+		cmds <- formatMessage(cmdSetQuality, qualityStandard)
 
-	// start and/or set up the lattice, whatever that is
-	queue = append(queue, formatMessage(cmdControlLattice, cmdPrintLattice))
+		// start and/or set up the lattice, whatever that is
+		cmds <- formatMessage(cmdControlLattice, cmdPrintLattice)
 
-	// Set energy used
-	var contrast int = 12000
-	queue = append(queue, formatMessage(cmdSetEnergy, printerShort(contrast)))
+		// Set energy used
+		var contrast int = 12000
+		cmds <- formatMessage(cmdSetEnergy, printerShort(contrast))
 
-	// Set mode to image mode
-	queue = append(queue, formatMessage(cmdDrawingMode, []byte{0}))
+		// Set mode to image mode
+		cmds <- formatMessage(cmdDrawingMode, []byte{0})
 
-	// not entirely sure what this does
-	queue = append(queue, formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed))
+		// not entirely sure what this does
+		cmds <- formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed)
 
-	// encode image, one row at a time
-	for row := range encodeImgRows(img) {
-		queue = append(queue, formatMessage(cmdDrawBitmap, row))
-	}
+		// encode image, one row at a time
+		for row := range encodeImgRows(img) {
+			cmds <- formatMessage(cmdDrawBitmap, row)
+		}
 
-	// finish the lattice, whatever that means
-	queue = append(queue, formatMessage(cmdControlLattice, cmdFinishLattice))
+		// finish the lattice, whatever that means
+		cmds <- formatMessage(cmdControlLattice, cmdFinishLattice)
 
-	// feed some empty lines
-	// feed_lines = 112
-	queue = append(queue, formatMessage(cmdOtherFeedPaper, cmdBlankSpeed))
+		// feed some empty lines
+		// feed_lines = 112
+		cmds <- formatMessage(cmdOtherFeedPaper, cmdBlankSpeed)
 
-	count := 112
-	for count > 0 {
-		feed := min(count, 0xFF)
-		queue = append(queue, formatMessage(cmdFeedPaper, printerShort(feed)))
-		count -= feed
-	}
+		count := 112
+		for count > 0 {
+			feed := min(count, 0xFF)
+			cmds <- formatMessage(cmdFeedPaper, printerShort(feed))
+			count -= feed
+		}
 
-	// use a GetDevState request as a way for the printer to signal that it finished
-	// printing its current job.
-	queue = append(queue, formatMessage(cmdGetDevState, []byte{0x00}))
+		// use a GetDevState request as a way for the printer to signal that it finished
+		// printing its current job.
+		cmds <- formatMessage(cmdGetDevState, []byte{0x00})
 
-	return queue
+		close(cmds)
+	}()
+
+	return cmds
 }
 
 func min[T constraints.Ordered](a, b T) T {

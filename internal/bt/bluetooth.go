@@ -12,7 +12,7 @@ const (
 	printWaitTime = 30 * time.Second
 )
 
-func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands [][]byte) error {
+func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands chan []byte) error {
 	device, err := adapter.Connect(address, bluetooth.ConnectionParams{})
 	if err != nil {
 		return fmt.Errorf("failed to connect to printer: %w", err)
@@ -45,7 +45,7 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 	}
 
 	log.Println("sending commands to printer")
-	for _, cmd := range commands {
+	for cmd := range commands {
 		sendbuf := cmd
 
 		fmt.Print(".")
