@@ -36,6 +36,7 @@ var (
 	// 0xA2 0xBF (fixed length, run-length)
 )
 
+// formatMessage encodes a printer command in the required format.
 func formatMessage(cmd byte, data []byte) []byte {
 	msg := new(bytes.Buffer)
 
@@ -69,8 +70,8 @@ energy = {
 contrast = 1
 */
 
-// encodeImgRows encodes each row of an image as an array of bytes; pixels
-// are stored
+// encodeImgRows encodes each row of an image as an array of bytes, where
+// each byte contains 8 pixels.
 func encodeImgRows(img *image.Gray) chan []byte {
 	out := make(chan []byte)
 
@@ -106,6 +107,8 @@ func encodeImgRows(img *image.Gray) chan []byte {
 	return out
 }
 
+// PrintImage is a "generator" (like in Python) function that returns a channel
+// where it writes the printer commands necessary to print an image.
 func PrintImage(img *image.Gray) chan []byte {
 	cmds := make(chan []byte)
 

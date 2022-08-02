@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	printWaitTime = 30 * time.Second
-	sendDelay     = 10 * time.Millisecond
+	printWaitTime = 30 * time.Second      // time to wait for the printer to finish printing.
+	sendDelay     = 10 * time.Millisecond // time to wait between each write command sent to the printer.
 )
 
+// chunks split the slice `s` in chunks of the given size.
 func chunks(s []byte, size int) [][]byte {
 	var result [][]byte
 	l := len(s)
@@ -28,6 +29,8 @@ func chunks(s []byte, size int) [][]byte {
 	return result
 }
 
+// SendCommands reads from the `commands` channel and send commands to the printer,
+// ensuring a certain chunk size (20 bytes) and a small delay between each write.
 func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands chan []byte) error {
 	device, err := adapter.Connect(address, bluetooth.ConnectionParams{})
 	if err != nil {

@@ -11,6 +11,10 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
+// FindDevice search for the named BLE device and returns its address; it
+// search indefinitely but can be stopped by pressing any key.
+// The `adapter` parameter is a Bluetooth adapter that must be enabled
+// before calling this function.
 func FindDevice(name string, adapter *bluetooth.Adapter) (bluetooth.Addresser, error) {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {

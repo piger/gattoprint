@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	PrintWidth              = 384
-	errorMultiplier float32 = 1.18
+	PrintWidth              = 384  // the width of the printed image, required by the printer.
+	errorMultiplier float32 = 1.18 // error multiplier for dithering.
 )
 
 var ditherers map[string]dither.Dither
@@ -38,6 +38,8 @@ func init() {
 	ditherers["FloydSteinberg"] = fs
 }
 
+// ConvertImage converts the given image file in a grayscale dithered image,
+// scaled down to the width required by the printer.
 func ConvertImage(filename string) (*image.Gray, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
