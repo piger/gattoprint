@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"image"
 
 	"golang.org/x/exp/constraints"
@@ -74,6 +75,43 @@ energy = {
 contrast = 1
 */
 
+// encodeImgRows encodes each row of an image as an array of bytes; pixels
+// are stored
+func encodeImgRows(img *image.Gray) chan []byte {
+	out := make(chan []byte)
+
+	go func() {
+		bounds := img.Bounds()
+
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			row := new(bytes.Buffer)
+			var pixels byte
+			index := 0
+
+			for x := bounds.Min.X; x < bounds.Max.X; x++ {
+				r, g, b, _ := img.At(x, y).RGBA()
+
+				if r == 0 && g == 0 && b == 0 {
+					pixels |= 1 << index
+				} else {
+					pixels |= 0
+				}
+
+				index++
+
+				if index == 8 {
+					row.WriteByte(pixels)
+					index = 0
+					pixels = 0
+				}
+			}
+			out <- row.Bytes()
+		}
+		close(out)
+	}()
+	return out
+}
+
 func PrintImage(img *image.Gray) [][]byte {
 	var queue [][]byte
 
@@ -93,30 +131,9 @@ func PrintImage(img *image.Gray) [][]byte {
 	// not entirely sure what this does
 	queue = append(queue, formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed))
 
-	b := img.Bounds()
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		var bmp []byte
-		var bit byte
-		index := 0
-
-		for x := b.Min.X; x < b.Max.X; x++ {
-			pixel := img.At(x, y)
-			r, g, b, _ := pixel.RGBA()
-			if r == 0 && g == 0 && b == 0 {
-				bit |= 1 << index
-
-			} else {
-				bit |= 0
-			}
-			index++
-			if index == 8 {
-				index = 0
-				bmp = append(bmp, bit)
-				bit = 0
-			}
-		}
-		cc := formatMessage(cmdDrawBitmap, bmp)
-		queue = append(queue, cc)
+	// encode image, one row at a time
+	for row := range encodeImgRows(img) {
+		queue = append(queue, formatMessage(cmdDrawBitmap, row))
 	}
 
 	// finish the lattice, whatever that means
