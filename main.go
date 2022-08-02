@@ -23,17 +23,17 @@ var (
 func run(filename string) error {
 	goo, err := graphics.ConvertImage(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("error converting image: %w", err)
 	}
 
 	out, err := os.Create(*flagOutput)
 	if err != nil {
-		return err
+		return fmt.Errorf("error opening preview file for writing: %w", err)
 	}
 	defer out.Close()
 
 	if err := png.Encode(out, goo); err != nil {
-		return err
+		return fmt.Errorf("error encoding preview: %w", err)
 	}
 
 	queue := commands.PrintImage(goo)
@@ -44,16 +44,18 @@ func run(filename string) error {
 
 	var adapter = bluetooth.DefaultAdapter
 	if err := adapter.Enable(); err != nil {
-		return err
+		return fmt.Errorf("error enabling Bluetooth adapter: %w", err)
 	}
+
 	addr, err := bt.FindDevice(*flagDeviceName, adapter)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't find printer: %w", err)
 	}
+
 	log.Printf("found %s: %s", *flagDeviceName, addr)
 
 	if err := bt.SendCommands(adapter, addr, queue); err != nil {
-		return err
+		return fmt.Errorf("error sending commands to printer: %w", err)
 	}
 
 	return nil
