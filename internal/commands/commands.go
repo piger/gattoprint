@@ -23,6 +23,8 @@ var (
 	cmdFinishLattice = []byte{0xAA, 0x55, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}
 	cmdBlankSpeed    = []byte{0x19}
 
+	qualityStandard = []byte{0x33}
+
 	// QUALITIES
 	// 0x31 0x32 0x33 0x34 0x35 (49, 50, 51, 52, 53 in Java)
 
@@ -76,25 +78,20 @@ func PrintImage(img *image.Gray) [][]byte {
 	var queue [][]byte
 
 	// set quality to standard
-	c1 := formatMessage(cmdSetQuality, []byte{0x33})
-	queue = append(queue, c1)
+	queue = append(queue, formatMessage(cmdSetQuality, qualityStandard))
 
 	// start and/or set up the lattice, whatever that is
-	c2 := formatMessage(cmdControlLattice, cmdPrintLattice)
-	queue = append(queue, c2)
+	queue = append(queue, formatMessage(cmdControlLattice, cmdPrintLattice))
 
 	// Set energy used
 	var contrast int = 12000
-	c3 := formatMessage(cmdSetEnergy, printerShort(contrast))
-	queue = append(queue, c3)
+	queue = append(queue, formatMessage(cmdSetEnergy, printerShort(contrast)))
 
 	// Set mode to image mode
-	c4 := formatMessage(cmdDrawingMode, []byte{0})
-	queue = append(queue, c4)
+	queue = append(queue, formatMessage(cmdDrawingMode, []byte{0}))
 
 	// not entirely sure what this does
-	c5 := formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed)
-	queue = append(queue, c5)
+	queue = append(queue, formatMessage(cmdOtherFeedPaper, cmdImgPrintSpeed))
 
 	b := img.Bounds()
 	for y := b.Min.Y; y < b.Max.Y; y++ {
@@ -123,13 +120,11 @@ func PrintImage(img *image.Gray) [][]byte {
 	}
 
 	// finish the lattice, whatever that means
-	c6 := formatMessage(cmdControlLattice, cmdFinishLattice)
-	queue = append(queue, c6)
+	queue = append(queue, formatMessage(cmdControlLattice, cmdFinishLattice))
 
 	// feed some empty lines
 	// feed_lines = 112
-	c7 := formatMessage(cmdOtherFeedPaper, cmdBlankSpeed)
-	queue = append(queue, c7)
+	queue = append(queue, formatMessage(cmdOtherFeedPaper, cmdBlankSpeed))
 
 	count := 112
 	for count > 0 {
@@ -140,8 +135,7 @@ func PrintImage(img *image.Gray) [][]byte {
 
 	// use a GetDevState request as a way for the printer to signal that it finished
 	// printing its current job.
-	c8 := formatMessage(cmdGetDevState, []byte{0x00})
-	queue = append(queue, c8)
+	queue = append(queue, formatMessage(cmdGetDevState, []byte{0x00}))
 
 	return queue
 }
