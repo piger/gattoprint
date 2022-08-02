@@ -58,6 +58,7 @@ func formatMessage(command byte, data []byte) []byte {
 	return result
 }
 
+// binary.Write(buf, binary.LittleEndian, i)
 func printerShort(i int) []byte {
 	result := []byte{
 		byte(i & 0xFF), byte((i >> 8) & 0xFF),
