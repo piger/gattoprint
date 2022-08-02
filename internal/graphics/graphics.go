@@ -1,6 +1,7 @@
 package graphics
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	PrintWidth = 384
-	ErrMul     = 1.18 // error multiplier
+	PrintWidth              = 384
+	errorMultiplier float32 = 1.18
 )
 
 var ditherers map[string]dither.Dither
@@ -77,9 +78,14 @@ func ConvertImage(filename string) (*image.Gray, error) {
 		return nil, fmt.Errorf("ditherer FloydSteinberg not found")
 	}
 
-	imgDithered := ditherer.Monochrome(imgGray, float32(ErrMul))
+	imgDithered := ditherer.Monochrome(imgGray, errorMultiplier)
 	b = imgDithered.Bounds()
+
 	log.Printf("dithered size: %dx%d", b.Dx(), b.Dy())
 
-	return imgDithered.(*image.Gray), nil
+	if result, ok := imgDithered.(*image.Gray); ok {
+		return result, nil
+	}
+
+	return nil, errors.New("ditherer did not return the right type")
 }
