@@ -65,7 +65,7 @@ func FindDevice(name string, adapter *bluetooth.Adapter) (bluetooth.Addresser, e
 	for {
 		select {
 		case <-keyPress:
-			return nil, errors.New("scan canceled")
+			return nil, errors.New("scan cancelled")
 
 		case result := <-jobChan:
 			return result, nil
