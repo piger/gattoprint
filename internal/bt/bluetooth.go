@@ -10,7 +10,23 @@ import (
 
 const (
 	printWaitTime = 30 * time.Second
+	sendDelay     = 10 * time.Millisecond
 )
+
+func chunks(s []byte, size int) [][]byte {
+	var result [][]byte
+	l := len(s)
+
+	for i := 0; i < l; i += size {
+		end := i + size
+		if end > l {
+			end = l
+		}
+		result = append(result, s[i:end])
+	}
+
+	return result
+}
 
 func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, commands chan []byte) error {
 	device, err := adapter.Connect(address, bluetooth.ConnectionParams{})
@@ -45,26 +61,19 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 	}
 
 	log.Println("sending commands to printer")
-	for cmd := range commands {
-		sendbuf := cmd
 
+	for cmd := range commands {
 		fmt.Print(".")
 
-		for len(sendbuf) != 0 {
-			partlen := 20
-			if len(sendbuf) < 20 {
-				partlen = len(sendbuf)
-			}
-
-			part := sendbuf[:partlen]
-			sendbuf = sendbuf[partlen:]
+		for _, chunk := range chunks(cmd, 20) {
 			fmt.Print("+")
-			if _, err := tx.WriteWithoutResponse(part); err != nil {
+			if _, err := tx.WriteWithoutResponse(chunk); err != nil {
 				return err
 			}
-			time.Sleep(time.Millisecond * 10)
+			time.Sleep(sendDelay)
 		}
 	}
+
 	fmt.Println()
 	log.Println("waiting for the printer to finish printing")
 
