@@ -31,6 +31,14 @@ Due to the requirements of the [Go Bluetooth](https://github.com/tinygo-org/blue
 cross-compiling this program is not supported, or at least is not as straightforward as it's usually
 for Go programs.
 
+### macOS privacy settings
+
+On macOS this program must be _allowed_ to use Bluetooth; in the "Security & Privacy" section
+of the "System Preferences" app, in the "Privacy" section, you must add this program to the
+apps allowed to use Bluetooth.
+
+If you run this program from a terminal like iTerm2 then the program to be added is iTerm itself.
+
 ## Additional resources
 
 - [WerWolv/PythonCatPrinter](https://github.com/WerWolv/PythonCatPrinter) -- the original project that seem to have [started it all](https://werwolv.net/blog/cat_printer).
