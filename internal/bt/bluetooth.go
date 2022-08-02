@@ -46,12 +46,12 @@ func SendCommands(adapter *bluetooth.Adapter, address bluetooth.Addresser, comma
 
 	printService := services[0]
 
-	characteristics, err := printService.DiscoverCharacteristics([]bluetooth.UUID{*WriteUUID, *NotificationUUID})
+	chs, err := printService.DiscoverCharacteristics([]bluetooth.UUID{*WriteUUID, *NotificationUUID})
 	if err != nil {
 		return fmt.Errorf("failed to get write characteristic: %w", err)
 	}
 
-	tx, notif := characteristics[0], characteristics[1]
+	tx, notif := chs[0], chs[1]
 	notifChan := make(chan struct{}, 1)
 
 	if err := notif.EnableNotifications(func(buf []byte) {
