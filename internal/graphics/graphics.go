@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/disintegration/imaging"
+	"github.com/anthonynsimon/bild/transform"
 	dither "github.com/esimov/dithergo"
 )
 
@@ -62,7 +62,7 @@ func ConvertImage(filename string) (*image.Gray, error) {
 	factor := float64(PrintWidth) / float64(width)
 	newHeight := int(float64(height) * factor)
 
-	imgResized := imaging.Fit(img, PrintWidth, newHeight, imaging.Lanczos)
+	imgResized := transform.Resize(img, PrintWidth, newHeight, transform.Lanczos)
 	b = imgResized.Bounds()
 	log.Printf("resized to: %dx%d", b.Dx(), b.Dy())
 
